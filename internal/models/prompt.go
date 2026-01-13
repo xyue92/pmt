@@ -5,6 +5,7 @@ import "time"
 // Prompt represents a saved prompt snippet
 type Prompt struct {
 	ID        string    `yaml:"id"`
+	Name      string    `yaml:"name"`      // user-defined title/name for the prompt
 	Content   string    `yaml:"content"`
 	Type      string    `yaml:"type"`      // bugfix, feature, refactor, test, general
 	Project   string    `yaml:"project"`   // from git detection

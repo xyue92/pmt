@@ -16,6 +16,7 @@ import (
 
 var (
 	pushType    string
+	pushName    string
 	pushContext string
 	pushTags    []string
 )
@@ -38,6 +39,7 @@ You can optionally specify a type and tags.`,
 func init() {
 	rootCmd.AddCommand(pushCmd)
 	pushCmd.Flags().StringVarP(&pushType, "type", "t", "general", "Type: bugfix, feature, refactor, test, general")
+	pushCmd.Flags().StringVarP(&pushName, "name", "n", "", "Custom name/title for the prompt")
 	pushCmd.Flags().StringVarP(&pushContext, "context", "c", "", "Context within the project")
 	pushCmd.Flags().StringSliceVarP(&pushTags, "tags", "g", []string{}, "Tags (comma-separated)")
 }
@@ -85,6 +87,7 @@ func runPush(cmd *cobra.Command, args []string) error {
 	// Create the prompt
 	prompt := &models.Prompt{
 		ID:        utils.GenerateID(),
+		Name:      pushName,
 		Content:   content,
 		Type:      pushType,
 		Project:   utils.DetectGitProject(),

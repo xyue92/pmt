@@ -16,13 +16,14 @@ func SelectPrompt(prompts []models.Prompt) (*models.Prompt, error) {
 
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}",
-		Active:   "▸ {{ .ID | cyan }} ({{ .Type | yellow }}) {{ .Content | truncate 60 }}",
-		Inactive: "  {{ .ID | cyan }} ({{ .Type | yellow }}) {{ .Content | truncate 60 }}",
-		Selected: "✓ Selected: {{ .ID | cyan }}",
+		Active:   "▸ {{ .ID | cyan }} {{ if .Name }}[{{ .Name | green }}] {{ end }}({{ .Type | yellow }}) {{ .Content | truncate 60 }}",
+		Inactive: "  {{ .ID | cyan }} {{ if .Name }}[{{ .Name | green }}] {{ end }}({{ .Type | yellow }}) {{ .Content | truncate 60 }}",
+		Selected: "✓ Selected: {{ .ID | cyan }}{{ if .Name }} [{{ .Name }}]{{ end }}",
 		Details: `
 --------- Details ----------
 ID:       {{ .ID }}
-Type:     {{ .Type }}
+{{ if .Name }}Name:     {{ .Name }}
+{{ end }}Type:     {{ .Type }}
 Project:  {{ .Project }}
 Created:  {{ .CreatedAt.Format "2006-01-02 15:04" }}
 Tags:     {{ joinTags .Tags }}
@@ -49,8 +50,8 @@ Content:
 		prompt := prompts[index]
 		input = strings.Replace(strings.ToLower(input), " ", "", -1)
 
-		// Search in ID, type, content, and tags
-		searchStr := strings.ToLower(prompt.ID + prompt.Type + prompt.Content + strings.Join(prompt.Tags, " "))
+		// Search in ID, name, type, content, and tags
+		searchStr := strings.ToLower(prompt.ID + prompt.Name + prompt.Type + prompt.Content + strings.Join(prompt.Tags, " "))
 		searchStr = strings.Replace(searchStr, " ", "", -1)
 		return strings.Contains(searchStr, input)
 	}

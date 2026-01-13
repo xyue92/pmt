@@ -59,14 +59,19 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print header
-	fmt.Printf("%-9s %-10s %-12s %-12s %-35s %s\n", "ID", "Type", "Project", "Context", "Content", "Created")
-	fmt.Println(strings.Repeat("-", 110))
+	fmt.Printf("%-9s %-20s %-10s %-12s %-12s %-30s %s\n", "ID", "Name", "Type", "Project", "Context", "Content", "Created")
+	fmt.Println(strings.Repeat("-", 125))
 
 	// Print each prompt
 	for _, p := range prompts {
 		content := p.Content
-		if len(content) > 35 {
-			content = content[:32] + "..."
+		if len(content) > 30 {
+			content = content[:27] + "..."
+		}
+
+		name := p.Name
+		if name == "" {
+			name = "-"
 		}
 
 		context := p.Context
@@ -75,8 +80,9 @@ func runList(cmd *cobra.Command, args []string) error {
 		}
 
 		createdStr := p.CreatedAt.Format("2006-01-02 15:04")
-		fmt.Printf("%-9s %-10s %-12s %-12s %-35s %s\n",
+		fmt.Printf("%-9s %-20s %-10s %-12s %-12s %-30s %s\n",
 			p.ID,
+			truncateString(name, 20),
 			p.Type,
 			truncateString(p.Project, 12),
 			truncateString(context, 12),

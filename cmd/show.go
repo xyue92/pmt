@@ -41,6 +41,11 @@ func runShow(cmd *cobra.Command, args []string) error {
 	// Display the prompt details
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Printf("ID:        %s\n", prompt.ID)
+
+	if prompt.Name != "" {
+		fmt.Printf("Name:      %s\n", prompt.Name)
+	}
+
 	fmt.Printf("Type:      %s\n", prompt.Type)
 	fmt.Printf("Project:   %s\n", prompt.Project)
 
