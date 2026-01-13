@@ -13,10 +13,11 @@ import (
 
 // FilterOptions defines the options for filtering prompts
 type FilterOptions struct {
-	Type    string
-	Project string
-	Context string
-	Tags    []string
+	Type          string
+	Project       string
+	Context       string
+	ContextPrefix bool // If true, match context as a prefix (e.g., "backend" matches "backend/api")
+	Tags          []string
 }
 
 // Store interface defines the methods for prompt storage
@@ -26,6 +27,8 @@ type Store interface {
 	FindByID(id string) (*models.Prompt, error)
 	Delete(id string) error
 	Filter(opts FilterOptions) ([]models.Prompt, error)
+	Update(id string, updater func(*models.Prompt)) error
+	BulkUpdate(updater func(*models.Prompt) bool) error
 }
 
 // FileStore implements the Store interface using YAML files
@@ -181,8 +184,18 @@ func (s *FileStore) Filter(opts FilterOptions) ([]models.Prompt, error) {
 		}
 
 		// Filter by context
-		if opts.Context != "" && !strings.EqualFold(p.Context, opts.Context) {
-			continue
+		if opts.Context != "" {
+			if opts.ContextPrefix {
+				// Prefix matching
+				if !p.MatchesContextPrefix(opts.Context) {
+					continue
+				}
+			} else {
+				// Exact matching
+				if !strings.EqualFold(p.Context, opts.Context) {
+					continue
+				}
+			}
 		}
 
 		// Filter by tags
@@ -210,4 +223,77 @@ func (s *FileStore) Filter(opts FilterOptions) ([]models.Prompt, error) {
 	}
 
 	return filtered, nil
+}
+
+// Update updates a single prompt by ID
+func (s *FileStore) Update(id string, updater func(*models.Prompt)) error {
+	store, err := s.LoadAll()
+	if err != nil {
+		return err
+	}
+
+	var matchIndex = -1
+	var matchCount = 0
+
+	for i := range store.Prompts {
+		if utils.MatchIDPrefix(store.Prompts[i].ID, id) {
+			matchIndex = i
+			matchCount++
+		}
+	}
+
+	if matchCount == 0 {
+		return fmt.Errorf("prompt with ID %s not found", id)
+	}
+
+	if matchCount > 1 {
+		return fmt.Errorf("ambiguous ID %s: matches multiple prompts", id)
+	}
+
+	// Apply the updater function
+	updater(&store.Prompts[matchIndex])
+
+	// Save the updated store
+	data, err := yaml.Marshal(store)
+	if err != nil {
+		return fmt.Errorf("failed to marshal prompts: %w", err)
+	}
+
+	if err := os.WriteFile(s.filePath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write prompts file: %w", err)
+	}
+
+	return nil
+}
+
+// BulkUpdate updates multiple prompts based on a condition
+// The updater function should return true if the prompt should be updated
+func (s *FileStore) BulkUpdate(updater func(*models.Prompt) bool) error {
+	store, err := s.LoadAll()
+	if err != nil {
+		return err
+	}
+
+	updateCount := 0
+	for i := range store.Prompts {
+		if updater(&store.Prompts[i]) {
+			updateCount++
+		}
+	}
+
+	if updateCount == 0 {
+		return fmt.Errorf("no prompts matched the update criteria")
+	}
+
+	// Save the updated store
+	data, err := yaml.Marshal(store)
+	if err != nil {
+		return fmt.Errorf("failed to marshal prompts: %w", err)
+	}
+
+	if err := os.WriteFile(s.filePath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write prompts file: %w", err)
+	}
+
+	return nil
 }

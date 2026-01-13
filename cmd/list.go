@@ -9,9 +9,10 @@ import (
 )
 
 var (
-	listType    string
-	listProject string
-	listContext string
+	listType          string
+	listProject       string
+	listContext       string
+	listContextPrefix bool
 )
 
 var listCmd = &cobra.Command{
@@ -19,10 +20,13 @@ var listCmd = &cobra.Command{
 	Short: "List all prompts",
 	Long: `List all saved prompts in a table format.
 
-You can filter by type or project using flags.`,
+You can filter by type, project, or context using flags.
+Use --prefix to match context hierarchically (e.g., "backend" matches "backend/api").`,
 	Example: `  pmt list
   pmt list -t bugfix
   pmt list -p my-api
+  pmt list -c backend --prefix       # Match backend and all sub-contexts
+  pmt list -c backend/api            # Exact match only
   pmt list -t feature -p my-api`,
 	Aliases: []string{"ls"},
 	RunE:    runList,
@@ -33,6 +37,7 @@ func init() {
 	listCmd.Flags().StringVarP(&listType, "type", "t", "", "Filter by type")
 	listCmd.Flags().StringVarP(&listProject, "project", "p", "", "Filter by project")
 	listCmd.Flags().StringVarP(&listContext, "context", "c", "", "Filter by context")
+	listCmd.Flags().BoolVar(&listContextPrefix, "prefix", false, "Match context as prefix (e.g., 'backend' matches 'backend/api')")
 }
 
 func runList(cmd *cobra.Command, args []string) error {
@@ -43,9 +48,10 @@ func runList(cmd *cobra.Command, args []string) error {
 
 	// Apply filters
 	filterOpts := storage.FilterOptions{
-		Type:    listType,
-		Project: listProject,
-		Context: listContext,
+		Type:          listType,
+		Project:       listProject,
+		Context:       listContext,
+		ContextPrefix: listContextPrefix,
 	}
 
 	prompts, err := store.Filter(filterOpts)
