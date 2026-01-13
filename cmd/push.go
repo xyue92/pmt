@@ -37,7 +37,7 @@ You can optionally specify a type and tags.`,
 
 func init() {
 	rootCmd.AddCommand(pushCmd)
-	pushCmd.Flags().StringVarP(&pushType, "type", "t", "general", "Type: bugfix, feature, refactor, general")
+	pushCmd.Flags().StringVarP(&pushType, "type", "t", "general", "Type: bugfix, feature, refactor, test, general")
 	pushCmd.Flags().StringVarP(&pushContext, "context", "c", "", "Context within the project")
 	pushCmd.Flags().StringSliceVarP(&pushTags, "tags", "g", []string{}, "Tags (comma-separated)")
 }
@@ -68,11 +68,12 @@ func runPush(cmd *cobra.Command, args []string) error {
 		"bugfix":   true,
 		"feature":  true,
 		"refactor": true,
+		"test":     true,
 		"general":  true,
 	}
 
 	if !validTypes[pushType] {
-		return fmt.Errorf("invalid type: %s (must be bugfix, feature, refactor, or general)", pushType)
+		return fmt.Errorf("invalid type: %s (must be bugfix, feature, refactor, test, or general)", pushType)
 	}
 
 	// Create the store

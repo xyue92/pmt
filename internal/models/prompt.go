@@ -6,7 +6,7 @@ import "time"
 type Prompt struct {
 	ID        string    `yaml:"id"`
 	Content   string    `yaml:"content"`
-	Type      string    `yaml:"type"`      // bugfix, feature, refactor, general
+	Type      string    `yaml:"type"`      // bugfix, feature, refactor, test, general
 	Project   string    `yaml:"project"`   // from git detection
 	Context   string    `yaml:"context"`   // user-defined context within a project
 	Tags      []string  `yaml:"tags"`
