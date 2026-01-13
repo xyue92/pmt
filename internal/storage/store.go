@@ -15,6 +15,7 @@ import (
 type FilterOptions struct {
 	Type    string
 	Project string
+	Context string
 	Tags    []string
 }
 
@@ -176,6 +177,11 @@ func (s *FileStore) Filter(opts FilterOptions) ([]models.Prompt, error) {
 
 		// Filter by project
 		if opts.Project != "" && !strings.EqualFold(p.Project, opts.Project) {
+			continue
+		}
+
+		// Filter by context
+		if opts.Context != "" && !strings.EqualFold(p.Context, opts.Context) {
 			continue
 		}
 

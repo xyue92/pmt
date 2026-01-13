@@ -9,6 +9,10 @@ import (
 	"github.com/sunny/pmt/internal/ui"
 )
 
+var (
+	applyContext string
+)
+
 var applyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Select and copy a prompt to clipboard",
@@ -17,12 +21,14 @@ var applyCmd = &cobra.Command{
 The selected prompt will be copied to your clipboard automatically.
 Use arrow keys to navigate and press Enter to select.
 Press / to search.`,
-	Example: `  pmt apply`,
-	RunE:    runApply,
+	Example: `  pmt apply
+  pmt apply -c backend`,
+	RunE: runApply,
 }
 
 func init() {
 	rootCmd.AddCommand(applyCmd)
+	applyCmd.Flags().StringVarP(&applyContext, "context", "c", "", "Filter by context")
 }
 
 func runApply(cmd *cobra.Command, args []string) error {
@@ -31,18 +37,22 @@ func runApply(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create store: %w", err)
 	}
 
-	// Load all prompts
-	promptStore, err := store.LoadAll()
+	// Apply filters
+	filterOpts := storage.FilterOptions{
+		Context: applyContext,
+	}
+
+	prompts, err := store.Filter(filterOpts)
 	if err != nil {
 		return fmt.Errorf("failed to load prompts: %w", err)
 	}
 
-	if len(promptStore.Prompts) == 0 {
+	if len(prompts) == 0 {
 		return fmt.Errorf("no prompts available. Use 'pmt push' to add prompts")
 	}
 
 	// Show interactive selector
-	selected, err := ui.SelectPrompt(promptStore.Prompts)
+	selected, err := ui.SelectPrompt(prompts)
 	if err != nil {
 		return fmt.Errorf("selection cancelled or failed: %w", err)
 	}

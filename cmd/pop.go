@@ -9,6 +9,10 @@ import (
 	"github.com/sunny/pmt/internal/ui"
 )
 
+var (
+	popContext string
+)
+
 var popCmd = &cobra.Command{
 	Use:   "pop",
 	Short: "Select, copy, and delete a prompt",
@@ -16,12 +20,14 @@ var popCmd = &cobra.Command{
 
 The selected prompt will be copied to your clipboard and then deleted from storage.
 Similar to 'git stash pop' - use this when you want to consume the prompt.`,
-	Example: `  pmt pop`,
-	RunE:    runPop,
+	Example: `  pmt pop
+  pmt pop -c backend`,
+	RunE: runPop,
 }
 
 func init() {
 	rootCmd.AddCommand(popCmd)
+	popCmd.Flags().StringVarP(&popContext, "context", "c", "", "Filter by context")
 }
 
 func runPop(cmd *cobra.Command, args []string) error {
@@ -30,18 +36,22 @@ func runPop(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create store: %w", err)
 	}
 
-	// Load all prompts
-	promptStore, err := store.LoadAll()
+	// Apply filters
+	filterOpts := storage.FilterOptions{
+		Context: popContext,
+	}
+
+	prompts, err := store.Filter(filterOpts)
 	if err != nil {
 		return fmt.Errorf("failed to load prompts: %w", err)
 	}
 
-	if len(promptStore.Prompts) == 0 {
+	if len(prompts) == 0 {
 		return fmt.Errorf("no prompts available. Use 'pmt push' to add prompts")
 	}
 
 	// Show interactive selector
-	selected, err := ui.SelectPrompt(promptStore.Prompts)
+	selected, err := ui.SelectPrompt(prompts)
 	if err != nil {
 		return fmt.Errorf("selection cancelled or failed: %w", err)
 	}

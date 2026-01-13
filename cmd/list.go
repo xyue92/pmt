@@ -11,6 +11,7 @@ import (
 var (
 	listType    string
 	listProject string
+	listContext string
 )
 
 var listCmd = &cobra.Command{
@@ -31,6 +32,7 @@ func init() {
 	rootCmd.AddCommand(listCmd)
 	listCmd.Flags().StringVarP(&listType, "type", "t", "", "Filter by type")
 	listCmd.Flags().StringVarP(&listProject, "project", "p", "", "Filter by project")
+	listCmd.Flags().StringVarP(&listContext, "context", "c", "", "Filter by context")
 }
 
 func runList(cmd *cobra.Command, args []string) error {
@@ -43,6 +45,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	filterOpts := storage.FilterOptions{
 		Type:    listType,
 		Project: listProject,
+		Context: listContext,
 	}
 
 	prompts, err := store.Filter(filterOpts)
@@ -56,21 +59,27 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print header
-	fmt.Printf("%-9s %-10s %-15s %-40s %s\n", "ID", "Type", "Project", "Content", "Created")
-	fmt.Println(strings.Repeat("-", 100))
+	fmt.Printf("%-9s %-10s %-12s %-12s %-35s %s\n", "ID", "Type", "Project", "Context", "Content", "Created")
+	fmt.Println(strings.Repeat("-", 110))
 
 	// Print each prompt
 	for _, p := range prompts {
 		content := p.Content
-		if len(content) > 40 {
-			content = content[:37] + "..."
+		if len(content) > 35 {
+			content = content[:32] + "..."
+		}
+
+		context := p.Context
+		if context == "" {
+			context = "-"
 		}
 
 		createdStr := p.CreatedAt.Format("2006-01-02 15:04")
-		fmt.Printf("%-9s %-10s %-15s %-40s %s\n",
+		fmt.Printf("%-9s %-10s %-12s %-12s %-35s %s\n",
 			p.ID,
 			p.Type,
-			truncateString(p.Project, 15),
+			truncateString(p.Project, 12),
+			truncateString(context, 12),
 			content,
 			createdStr,
 		)

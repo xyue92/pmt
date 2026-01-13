@@ -44,6 +44,10 @@ func runShow(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Type:      %s\n", prompt.Type)
 	fmt.Printf("Project:   %s\n", prompt.Project)
 
+	if prompt.Context != "" {
+		fmt.Printf("Context:   %s\n", prompt.Context)
+	}
+
 	if len(prompt.Tags) > 0 {
 		fmt.Printf("Tags:      %s\n", strings.Join(prompt.Tags, ", "))
 	} else {

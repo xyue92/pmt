@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	pushType string
-	pushTags []string
+	pushType    string
+	pushContext string
+	pushTags    []string
 )
 
 var pushCmd = &cobra.Command{
@@ -37,6 +38,7 @@ You can optionally specify a type and tags.`,
 func init() {
 	rootCmd.AddCommand(pushCmd)
 	pushCmd.Flags().StringVarP(&pushType, "type", "t", "general", "Type: bugfix, feature, refactor, general")
+	pushCmd.Flags().StringVarP(&pushContext, "context", "c", "", "Context within the project")
 	pushCmd.Flags().StringSliceVarP(&pushTags, "tags", "g", []string{}, "Tags (comma-separated)")
 }
 
@@ -85,6 +87,7 @@ func runPush(cmd *cobra.Command, args []string) error {
 		Content:   content,
 		Type:      pushType,
 		Project:   utils.DetectGitProject(),
+		Context:   pushContext,
 		Tags:      pushTags,
 		CreatedAt: time.Now(),
 	}
